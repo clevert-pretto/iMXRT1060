@@ -1,0 +1,19 @@
+# Build Artifacts
+Debug/
+Release/
+*.elf
+*.bin
+*.map
+
+# IDE Internal Files (Specific to your local machine)
+.settings/
+.launches/
+*.pjt
+*.launch
+.metadata
+.mcuxpressoide_packages_support
+
+
+# SDK and Temporary files
+/External_SDK/
+*.pyc

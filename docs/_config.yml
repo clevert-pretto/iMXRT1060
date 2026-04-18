@@ -1,0 +1,15 @@
+title: i.MX RT1060 Experimental Journey
+description: A production ready deep dive into NXP Crossover MCUs.
+theme: jekyll-theme-minimal # Or use remote_theme for Just the Docs
+
+# For Just the Docs (Highly Recommended for visualization)
+remote_theme: just-the-docs/just-the-docs
+
+# Enable Mermaid diagrams for hardware flowcharts
+mermaid:
+  version: "10.0.0"
+
+# Code highlighting
+kramdown:
+  syntax_highlighter_opts:
+    block_header: false
