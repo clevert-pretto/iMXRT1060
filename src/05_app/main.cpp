@@ -7,23 +7,22 @@
  */
 
 extern "C"{
-/* FreeRTOS kernel includes. */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "timers.h"
 /* Freescale includes. */
 #include "fsl_device_registers.h"
 #include "fsl_debug_console.h"
-#include "board.h"
-#include "app.h"
 
 }
+
+#include "Mcal_board.hpp"
+#include "Osal_rtos.hpp"
+#include "appTask.hpp"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 /* Task priorities. */
-#define hello_task_PRIORITY (configMAX_PRIORITIES - 1)
+
+#define hello_task_PRIORITY   4//(configMAX_PRIORITIES - 1)
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -35,18 +34,32 @@ static void hello_task(void *pvParameters);
 /*!
  * @brief Application entry point.
  */
+
+
+
+
 int main(void)
 {
     /* Init board hardware. */
-    BOARD_InitHardware();
-    if (xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE + 100, NULL, hello_task_PRIORITY, NULL) !=
-        pdPASS)
+    Mcal::Board::InitHardware();
+
+    Osal::StaticThread<2048> helloTask(hello_task,
+    								   nullptr,
+    								   Osal::Priority::enumNormal,
+    								   "Hello_task");
+
+    AppTask::helloTaskPtr = &helloTask;
+
+    if(AppTask::helloTaskPtr->Start() == Osal::Status::enumError)
+//    if (xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE + 100, NULL, hello_task_PRIORITY, NULL) !=
+//        pdPASS)
     {
-        PRINTF("Task creation failed!.\r\n");
+        PRINTF("App Task creation failed!.\r\n");
         while (1)
             ;
     }
-    vTaskStartScheduler();
+    Osal::Kernel::Start();
+    //vTaskStartScheduler();
     for (;;)
         ;
 }
@@ -54,11 +67,14 @@ int main(void)
 /*!
  * @brief Task responsible for printing of "Hello world." message.
  */
-static void hello_task(void *pvParameters)
+void hello_task(void *pvParameters)
 {
     for (;;)
     {
         PRINTF("Hello world.\r\n");
-        vTaskSuspend(NULL);
+//        Osal::Thread::Sleep(std::chrono::milliseconds(1000));
+        AppTask::helloTaskPtr->Suspend();
+        //helloTask.Suspend();
+        //vTaskSuspend(NULL);
     }
 }
