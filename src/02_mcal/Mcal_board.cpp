@@ -17,7 +17,8 @@ extern "C" {
 	#include "pin_mux.h"
 	#include "clock_config.h"
 	#include "board.h"
-
+	#include "fsl_device_registers.h"
+	#include "fsl_debug_console.h"
 }
 
 void Mcal::Board::InitHardware(void)

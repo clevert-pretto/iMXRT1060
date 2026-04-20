@@ -6,26 +6,19 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-extern "C"{
-/* Freescale includes. */
-#include "fsl_device_registers.h"
-#include "fsl_debug_console.h"
-
-}
-
 #include "Mcal_board.hpp"
 #include "Osal_rtos.hpp"
 #include "appTask.hpp"
-
+#include "Svl_logger.hpp"
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
 /* Task priorities. */
 
-#define hello_task_PRIORITY   4//(configMAX_PRIORITIES - 1)
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
+extern "C" void __libc_init_array(void); // prototype for standard init function
 static void hello_task(void *pvParameters);
 
 /*******************************************************************************
@@ -42,6 +35,9 @@ int main(void)
 {
     /* Init board hardware. */
     Mcal::Board::InitHardware();
+    __libc_init_array();
+
+    Service::Logger::Init();
 
     Osal::StaticThread<2048> helloTask(hello_task,
     								   nullptr,
@@ -51,15 +47,14 @@ int main(void)
     AppTask::helloTaskPtr = &helloTask;
 
     if(AppTask::helloTaskPtr->Start() == Osal::Status::enumError)
-//    if (xTaskCreate(hello_task, "Hello_task", configMINIMAL_STACK_SIZE + 100, NULL, hello_task_PRIORITY, NULL) !=
-//        pdPASS)
     {
-        PRINTF("App Task creation failed!.\r\n");
+        //PRINTF("App Task creation failed!.\r\n");
+
+        Service::Logger::Log(Service::LogLevel::enumInfo, "App Task creation failed!.\r\n");
         while (1)
             ;
     }
     Osal::Kernel::Start();
-    //vTaskStartScheduler();
     for (;;)
         ;
 }
@@ -69,12 +64,27 @@ int main(void)
  */
 void hello_task(void *pvParameters)
 {
+    uint32_t counter = 0;
+
+    // Use the single-entry Log method with printf-style arguments
+    Service::Logger::Log(Service::LogLevel::enumInfo, "Task started. Pointer address: %p", pvParameters);
+
     for (;;)
     {
-        PRINTF("Hello world.\r\n");
-//        Osal::Thread::Sleep(std::chrono::milliseconds(1000));
-        AppTask::helloTaskPtr->Suspend();
-        //helloTask.Suspend();
-        //vTaskSuspend(NULL);
+        Service::Logger::Log(Service::LogLevel::enumInfo, "System Heartbeat - Count: %d", counter++);
+
+        /* Example of using different log levels */
+        if (counter % 10 == 0)
+        {
+            Service::Logger::Log(Service::LogLevel::enumWarning, "Counter reached a multiple of 10.");
+
+        }
+        Osal::Thread::Sleep(std::chrono::milliseconds(1000));
+
+        if (counter > 10)
+		{
+			/* Use OSAL for delay to keep logic agnostic */
+        	AppTask::helloTaskPtr->Suspend();
+		}
     }
 }
