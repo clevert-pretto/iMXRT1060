@@ -12,7 +12,8 @@
  */
 
 #include "Mcal_board.hpp"
-
+#include "Mcal_Watchdog.hpp"
+#include "sysConfig.hpp" //app system specific macros
 extern "C" {
 	#include "pin_mux.h"
 	#include "clock_config.h"
@@ -26,5 +27,13 @@ void Mcal::Board::InitHardware(void)
 	BOARD_ConfigMPU();
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
+
+	/* Enable DWT Cycle Counter for SDK_Delay functions */
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+	DWT->CYCCNT = 0;
+	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
+	Mcal::Watchdog::Initialize(SYS_WATCHDOG_TIMEOUT_ms);
+
 	BOARD_InitDebugConsole();
 }

@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-//#include "Mcal_post.hpp"
+#include "Mcal_Watchdog.hpp"
 #include "Mcal_board.hpp"
 #include "Osal_rtos.hpp"
 #include "appTask.hpp"
@@ -20,7 +20,7 @@
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-extern "C" void __libc_init_array(void); // prototype for standard init function
+
 static void hello_task(void *pvParameters);
 
 /*******************************************************************************
@@ -33,16 +33,17 @@ extern "C" {
 	#include "fsl_device_registers.h"
 	#include "fsl_common.h"
 }
+
+
+Osal::StaticThread<2048> helloTask(hello_task,
+								   nullptr,
+								   Osal::Priority::enumNormal,
+								   "Hello_task");
 int main(void)
 {
-	/* Force Enable FPU (Coprocessor 10 and 11) */
-	SCB->CPACR |= ((3UL << 10*2) | (3UL << 11*2));
-	__DSB();
-	__ISB();
     /* Init board hardware. */
     Mcal::Board::InitHardware();
 
-    SDK_DelayAtLeastUs(1000, SDK_DEVICE_MAXIMUM_CPU_CLOCK_FREQUENCY);
     //Check reset cause
     Mcal::ResetCause resetCause = Service::PostManager::RunPhase1ResetCauseTest();
 
@@ -54,17 +55,19 @@ int main(void)
     	while(1);
     }
 
-    __libc_init_array();
-
     Service::Logger::Init();
 
     Service::Logger::Log(Service::LogLevel::enumInfo, "Reset cause = %d\r\n", resetCause);
-    Service::Logger::Log(Service::LogLevel::enumInfo, "Phase 1: Core CPU Test PASSED\r\n", resetCause);
+    Service::Logger::Log(Service::LogLevel::enumInfo, "[POST] Phase 1: Core CPU Test PASSED\r\n", resetCause);
 
-    Osal::StaticThread<2048> helloTask(hello_task,
-    								   nullptr,
-    								   Osal::Priority::enumNormal,
-    								   "Hello_task");
+    if(Service::PostManager::RunPhase2InternalPeriBusTest())
+    {
+    	Service::Logger::Log(Service::LogLevel::enumInfo, "OK to Run Phase 3\r\n");
+		if(Service::PostManager::RunPhase3InternalSysAcceltest())
+		{
+			Service::Logger::Log(Service::LogLevel::enumInfo, "OK to Run Phase 4\r\n");
+		}
+    }
 
     AppTask::helloTaskPtr = &helloTask;
 
@@ -86,7 +89,7 @@ int main(void)
  */
 void hello_task(void *pvParameters)
 {
-    uint32_t counter = 0;
+    uint32_t counter = 0u;
 
     // Use the single-entry Log method with printf-style arguments
     Service::Logger::Log(Service::LogLevel::enumInfo, "Task started. Pointer address: %p", pvParameters);
@@ -96,17 +99,20 @@ void hello_task(void *pvParameters)
         Service::Logger::Log(Service::LogLevel::enumInfo, "System Heartbeat - Count: %d", counter++);
 
         /* Example of using different log levels */
-        if (counter % 10 == 0)
+        if (counter % 10u == 0)
         {
             Service::Logger::Log(Service::LogLevel::enumWarning, "Counter reached a multiple of 10.");
 
         }
         Osal::Thread::Sleep(std::chrono::milliseconds(1000));
 
-        if (counter > 10)
+        if (counter > 10u)
 		{
+        	counter = 0u;
 			/* Use OSAL for delay to keep logic agnostic */
-        	AppTask::helloTaskPtr->Suspend();
+//        	AppTask::helloTaskPtr->Suspend();
+            Mcal::Watchdog::Refresh();
 		}
+
     }
 }

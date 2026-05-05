@@ -24,6 +24,7 @@ namespace Mcal {
 		static void Initialize(uint32_t timeout_ms);
 		static void Refresh();
 		static void TriggerReset(); //for testing the reset path
+		static void RegisterInterruptCallback(void (*cb)(void));
 	};
 } //namespace Mcal
 

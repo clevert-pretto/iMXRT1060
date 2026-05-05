@@ -28,7 +28,26 @@ namespace Mcal {
 		enumFlexRamFail = (1 << 2),
 		enumRamFail     = (1 << 3),
 		enumFlashFail   = (1 << 4),
-		enumRevisionFail= (1 << 5)
+		enumRevisionFail= (1 << 5),
+		enumCCMFail		= (1 << 6),
+		enumDCDCFail	= (1 << 7),
+		enumWDOGFail	= (1 << 8),
+		enumSDRAMFail	= (1 << 9),
+		enumMPUFail		= (1 << 10),
+		enumNVICFail	= (1 << 11),
+		enumI2CFail		= (1 << 12),
+		enumBEEFail		= (1 << 13),
+		enumADCFail		= (1 << 14),
+		enumTRNGFail	= (1 << 15),
+	    enumDMAFail		= (1 << 16),
+	    enumDCPFail		= (1 << 17),
+	    enumSNVSFail	= (1 << 18),
+	    enumCacheFail	= (1 << 19),
+	    enumFlexIOFail	= (1 << 20),
+	    enumFlexSPI2Fail= (1 << 21),
+	    enumOTAFail		= (1 << 22),
+	    enumLifetimeWarning	= (1 << 23) // Non-fatal advisory warning
+
 	};
 
 	/**
@@ -54,6 +73,29 @@ namespace Mcal {
 		static PostStatus RunInternalRamIntegrity();   // Test 5
 		static PostStatus VerifyFlashIntegrity();      // Test 7 & 8
 		static ResetCause GetResetCause();             // Test 9
+
+		// Phase 2: Internal Peripheral and Bus tests
+		static PostStatus VerifyClockStability();		// Test 1 & 2
+		static PostStatus CheckPowerRails();          	// Test 3
+        static PostStatus VerifyWatchdogLatching();    	// Test 4
+        static PostStatus RunSdramTest();             	// Test 5
+        static PostStatus VerifyMpuRegions();         	// Test 6
+        static PostStatus TestNvicSoftwareInterrupt(); 	// Test 7
+        static PostStatus VerifyI2cBusHealth();       	// Test 8
+        static PostStatus CheckBeeStatus();           	// Test 9
+        static PostStatus CalibrateAdc();             	// Test 10
+
+        // Phase 3: Internal system accelerators
+        static PostStatus VerifyTrngEntropy();			//Test 1
+        static PostStatus TestEdmaTransfer();			//Test 2
+        static PostStatus VerifyDcpFunctional();		//Test 3
+        static PostStatus VerifyRtcTicking();			//Test 4
+        static PostStatus VerifyCacheStatus();			//Test 5
+        static PostStatus VerifyFlexIoClock();			//Test 6
+        static PostStatus VerifySecondaryFlash();		//Test 7
+        static PostStatus VerifyFlashRemap();			//Test 8
+        static PostStatus AuditLifetimeCounters();		//Test 9
+
 	};
 }
 
