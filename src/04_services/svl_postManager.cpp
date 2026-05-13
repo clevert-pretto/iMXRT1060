@@ -91,17 +91,17 @@ namespace Service {
 	bool PostManager::RunPhase3InternalSysAcceltest (void)
 	{
 		bool retVal = false;
-		uint32_t results = 0;
+		uint64_t results = 0;
 
-		results |= static_cast<uint32_t>(Mcal::Post::VerifyTrngEntropy());
-		results |= static_cast<uint32_t>(Mcal::Post::TestEdmaTransfer());
-		results |= static_cast<uint32_t>(Mcal::Post::VerifyDcpFunctional());
-		results |= static_cast<uint32_t>(Mcal::Post::VerifyRtcTicking());
-		results |= static_cast<uint32_t>(Mcal::Post::VerifyCacheStatus());
-		results |= static_cast<uint32_t>(Mcal::Post::VerifyFlexIoClock());
-		results |= static_cast<uint32_t>(Mcal::Post::VerifySecondaryFlash());
-		results |= static_cast<uint32_t>(Mcal::Post::VerifyFlashRemap());
-		results |= static_cast<uint32_t>(Mcal::Post::AuditLifetimeCounters());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifyTrngEntropy());
+		results |= static_cast<uint64_t>(Mcal::Post::TestEdmaTransfer());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifyDcpFunctional());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifyRtcTicking());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifyCacheStatus());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifyFlexIoClock());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifySecondaryFlash());
+		results |= static_cast<uint64_t>(Mcal::Post::VerifyFlashRemap());
+		results |= static_cast<uint64_t>(Mcal::Post::AuditLifetimeCounters());
 
 		if(results == 0)
 		{
@@ -109,31 +109,31 @@ namespace Service {
 			retVal = true;
 		}
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumTRNGFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumTRNGFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: TRNG is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumDMAFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumDMAFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: DMA is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumDCPFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumDCPFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: DCP is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumSNVSFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumSNVSFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: SNVS is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumCacheFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumCacheFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: Cache is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumFlexIOFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumFlexIOFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: FlexIO is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumFlexSPI2Fail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumFlexSPI2Fail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: FlexSPI is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumOTAFail))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumOTAFail))
 		        Service::Logger::Log(LogLevel::enumError, "[POST] Phase 3 FAILED: OTA is MISCONFIGURED");
 
-		if (results & static_cast<uint32_t>(Mcal::PostStatus::enumLifetimeWarning))
+		if (results & static_cast<uint64_t>(Mcal::PostStatus::enumLifetimeWarning))
 		        Service::Logger::Log(LogLevel::enumWarning, "[POST] Phase 3 WARNING: Need servicing");
 
 		return retVal;
@@ -141,7 +141,61 @@ namespace Service {
 	bool PostManager::RunPhase4ExternalFunctionalTest (void)
 	{
 		bool retVal = false;
+		uint64_t results = 0;
+		if(!Mcal::Post::IsSkipButtonPressed())
+		{
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyCanBusHealth());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyEnetPhySmi());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyAudioCodecReady());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifySdCardInserted());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyUsbPhyStatus());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyMotionSensor());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyPmuVoltage());
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyDisplayClock());
 
+			results |= static_cast<uint64_t>(Mcal::Post::VerifyPwmTimers());
+			results |= static_cast<uint64_t>(Mcal::Post::AuditSupplyRails());
+
+			if(results == 0)
+			{
+				Service::Logger::Log(LogLevel::enumInfo, "[POST] Phase 4: External Functional Tests PASSED");
+				retVal = true;
+			}
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumCANBusFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: CAN");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumEnetPhyFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: ETHERNET PHY/MDIO");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumCodecFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: Audio Codec");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumSDCardFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: SD Card");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumUSBPhyFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: USB PHY");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumExtI2CFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: External I2C");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumPMUFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: PMU");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumLCDFail))
+					Service::Logger::Log(LogLevel::enumError, "[POST] Phase 4 FAILED: LCD");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumPWMFail))
+					Service::Logger::Log(LogLevel::enumWarning, "[POST] Phase 4 WARNING: PWM");
+
+			if (results & static_cast<uint64_t>(Mcal::PostStatus::enumPWRFail))
+					Service::Logger::Log(LogLevel::enumWarning, "[POST] Phase 4 WARNING: Supply rail");
+		}
+		else
+		{
+			Service::Logger::Log(LogLevel::enumInfo, "[POST] button press detected, Skipping....");
+		}
 		return retVal;
 	}
 }

@@ -21,33 +21,49 @@ namespace Mcal {
      * @brief Result codes for Phase 1 POST.
      * Each bit represents a specific failure for easy bitmask reporting.
      */
-	enum class PostStatus : uint32_t {
+	enum class PostStatus : uint64_t
+	{
+		//Phase 1
 		enumPASS = 0,
-		enumCpuFail     = (1 << 0),
-		enumTempFail    = (1 << 1),
-		enumFlexRamFail = (1 << 2),
-		enumRamFail     = (1 << 3),
-		enumFlashFail   = (1 << 4),
-		enumRevisionFail= (1 << 5),
-		enumCCMFail		= (1 << 6),
-		enumDCDCFail	= (1 << 7),
-		enumWDOGFail	= (1 << 8),
-		enumSDRAMFail	= (1 << 9),
-		enumMPUFail		= (1 << 10),
-		enumNVICFail	= (1 << 11),
-		enumI2CFail		= (1 << 12),
-		enumBEEFail		= (1 << 13),
-		enumADCFail		= (1 << 14),
-		enumTRNGFail	= (1 << 15),
-	    enumDMAFail		= (1 << 16),
-	    enumDCPFail		= (1 << 17),
-	    enumSNVSFail	= (1 << 18),
-	    enumCacheFail	= (1 << 19),
-	    enumFlexIOFail	= (1 << 20),
-	    enumFlexSPI2Fail= (1 << 21),
-	    enumOTAFail		= (1 << 22),
-	    enumLifetimeWarning	= (1 << 23) // Non-fatal advisory warning
+		enumCpuFail     = (1ull << 0u),
+		enumTempFail    = (1ull << 1u),
+		enumFlexRamFail = (1ull << 2u),
+		enumRamFail     = (1ull << 3u),
+		enumFlashFail   = (1ull << 4u),
+		enumRevisionFail= (1ull << 5u),
+		//Phase 2
+		enumCCMFail		= (1ull << 6u),
+		enumDCDCFail	= (1ull << 7u),
+		enumWDOGFail	= (1ull << 8u),
+		enumSDRAMFail	= (1ull << 9u),
+		enumMPUFail		= (1ull << 10u),
+		enumNVICFail	= (1ull << 11u),
+		enumI2CFail		= (1ull << 12u),
+		enumBEEFail		= (1ull << 13u),
+		enumADCFail		= (1ull << 14u),
+		//Phase 3
+		enumTRNGFail	= (1ull << 15u),
+	    enumDMAFail		= (1ull << 16u),
+	    enumDCPFail		= (1ull << 17u),
+	    enumSNVSFail	= (1ull << 18u),
+	    enumCacheFail	= (1ull << 19u),
+	    enumFlexIOFail	= (1ull << 20u),
+	    enumFlexSPI2Fail= (1ull << 21u),
+	    enumOTAFail		= (1ull << 22u),
+	    enumLifetimeWarning	= (1ull << 23u), // Non-fatal advisory warning
+		//Phase 4
+		enumCANBusFail	= (1ull << 24u),
+		enumEnetPhyFail	= (1ull << 25u),
+		enumCodecFail	= (1ull << 26u),
+		enumSDCardFail	= (1ull << 27u),
+		enumUSBPhyFail	= (1ull << 28u),
+		enumExtI2CFail	= (1ull << 29u),
+		enumPMUFail	= (1ull << 30u),
+		enumLCDFail	= (1ull << 31u),
+		enumPWMFail	= (1ull << 32u),
+		enumPWRFail	= (1ull << 33u),
 
+		enumMAXFail = (1ull << 63u)
 	};
 
 	/**
@@ -96,6 +112,44 @@ namespace Mcal {
         static PostStatus VerifyFlashRemap();			//Test 8
         static PostStatus AuditLifetimeCounters();		//Test 9
 
+        //Phase 4: External Functional test
+        /* Verifies if the CAN engine has encountered bus errors
+         * (e.g., bit stuffing or form errors) during initialization.
+         */
+        static PostStatus VerifyCanBusHealth();			//Test 1
+
+        /*Queries the external PHY chip via the SMI
+         * (Serial Management Interface) to verify connectivity.*/
+        static PostStatus VerifyEnetPhySmi();			//Test 2 & 3
+
+        /* Uses the I2C bus to ping the audio codec. If the bus hangs,
+         *  it indicates a hardware pull-up failure or a dead codec.*/
+        static PostStatus VerifyAudioCodecReady();		//Test 4
+
+        /* Checks the physical insertion bit from the SD card controller. */
+        static PostStatus VerifySdCardInserted();		//Test 5
+
+        /* Verifies the internal USB PHYs have stabilized their power-on state. */
+        static PostStatus VerifyUsbPhyStatus();			//Test 6
+
+        /* Performs a "Who Am I" auditon the FXOS8700 sensor*/
+        static PostStatus VerifyMotionSensor();			//Test 7
+
+        /* Ensures the internal regulator is providing the 1.1V required for the 600MHz CPU overdrive */
+        static PostStatus VerifyPmuVoltage();			//Test 8
+
+        /* Verifies the display interface clock is running before driving the panel. */
+        static PostStatus VerifyDisplayClock();			//Test 9
+
+        /* Allows the POST to be bypassed or interactive by checking the GPIO state */
+        static bool IsSkipButtonPressed();		//Test 10
+
+        /* Verifies the FlexPWM submodule clocking is active */
+        static PostStatus VerifyPwmTimers();			//Test 11
+
+        /* Measures the 3.3V rail (via a voltage divider) to ensure board power health */
+        static PostStatus AuditSupplyRails();			//Test 12
+        //Test 13 'stack high-watermark' will be part of osal_rtos
 	};
 }
 

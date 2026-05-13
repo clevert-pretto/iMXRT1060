@@ -1,0 +1,15 @@
+{
+  "version": "25.3",
+  "toolchainPath": "${userHome}/.mcuxpressotools/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi",
+  "linkedProjects": [],
+  "trustZoneType": "none",
+  "multicoreType": "none",
+  "projectType": "sdk-freestanding",
+  "sdk": {
+    "path": "F:\\nxp\\EVK-MIMXRT1060\\evk_mimxrt1060",
+    "version": "2.16.000",
+    "boardId": "evkmimxrt1060",
+    "deviceId": "MIMXRT1062xxxxA",
+    "coreId": "core0_MIMXRT1062xxxxA"
+  }
+}

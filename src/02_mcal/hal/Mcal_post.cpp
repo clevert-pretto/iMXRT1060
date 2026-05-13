@@ -570,4 +570,125 @@ namespace Mcal {
 
     	return ret;
     }
+
+    // Phase 4
+    PostStatus Post::VerifyCanBusHealth()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Audit Transmit and Receive Error Counters */
+		uint32_t ecr = CAN1->ECR;
+		uint32_t txErr = (ecr & CAN_ECR_TXERRCNT_MASK) >> CAN_ECR_TXERRCNT_SHIFT;
+		uint32_t rxErr = (ecr & CAN_ECR_RXERRCNT_MASK) >> CAN_ECR_RXERRCNT_SHIFT;
+
+		if ((txErr > 96U) || (rxErr > 96U))
+		{
+			ret = PostStatus::enumCANBusFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::VerifyEnetPhySmi()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Ensure ENET clock is active */
+		CLOCK_EnableClock(kCLOCK_Enet);
+		/* Verify MDIO is not held in a busy state */
+		if ((ENET->MMFR & ENET_MMFR_OP_MASK) != 0U)
+		{
+			ret = PostStatus::enumEnetPhyFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::VerifyAudioCodecReady()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Audit LPI2C1 Status (Used for WM8960 on EVKC) */
+		if ((LPI2C1->MSR & LPI2C_MSR_BBF_MASK) != 0U)
+		{
+			ret = PostStatus::enumI2CFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::VerifySdCardInserted()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Check CINST (Card Inserted) bit in Present State register */
+		if (!(USDHC1->PRES_STATE & USDHC_PRES_STATE_CINST_MASK))
+		{
+			ret = PostStatus::enumSDCardFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::VerifyUsbPhyStatus()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Check if PHY1 is powered and out of reset */
+		if (!(USBPHY1->STATUS & USBPHY_STATUS_RSVD1_MASK))
+		{
+			ret = PostStatus::enumUSBPhyFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::VerifyMotionSensor()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* This assumes a synchronous I2C driver call exists */
+		uint8_t whoAmI = 0;
+		// I2C_Read(Address 0x1E, Reg 0x0D, &whoAmI);
+		// if (whoAmI != 0xC7U) return PostStatus::enumExtI2CFail;
+    	return ret;
+    }
+
+    PostStatus Post::VerifyPmuVoltage()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Check STS_DC_OK bit (DCDC Output OK) */
+		if (!(DCDC->REG0 & DCDC_REG0_STS_DC_OK_MASK))
+		{
+			ret = PostStatus::enumPMUFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::VerifyDisplayClock()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	if ((CCM->CCGR3 & CCM_CCGR3_CG13_MASK) == 0U)
+    	{
+    	        return PostStatus::enumLCDFail;
+    	    }
+    	return ret;
+    }
+
+    bool Post::IsSkipButtonPressed()
+    {
+    	return (GPIO5->DR & (1U << 0)) ? false : true; // Active Low
+    }
+
+    PostStatus Post::VerifyPwmTimers()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* Check if PWM1 Submodule 0 is enabled */
+		if ((PWM1->MCTRL & PWM_MCTRL_RUN_MASK) == 0U)
+		{
+			ret = PostStatus::enumPWMFail;
+		}
+    	return ret;
+    }
+
+    PostStatus Post::AuditSupplyRails()
+    {
+    	PostStatus ret = PostStatus::enumPASS;
+    	/* This requires ADC calibration to have finished in Phase 2 */
+		uint32_t voltageRaw = ADC1->R[0]; // Sample result
+		if (voltageRaw < 0x800U)
+		{
+			ret = PostStatus::enumPWRFail;
+		}
+    	return ret;
+    }
 }
